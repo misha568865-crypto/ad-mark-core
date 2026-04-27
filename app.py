@@ -3,149 +3,166 @@ import pandas as pd
 import plotly.graph_objects as go
 import time
 
-# Принудительная настройка страницы
+# 1. Системная настройка страницы
 st.set_page_config(
-    page_title="АД-МАРК CORE",
+    page_title="AD-MARK CORE",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- ЖЕСТКИЙ CSS: БЛОКИРОВКА СВЕТЛОЙ ТЕМЫ И ЧИСТКА ИНТЕРФЕЙСА ---
+# 2. Адаптивный дизайн (работает для светлой и темной темы)
 st.markdown("""
     <style>
-    /* 1. Блокируем фон приложения и убираем верхнюю полосу */
-    header, .stApp {
-        background-color: #0E1117 !important;
-    }
+    /* Общие отступы и шрифты */
+    .main { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
-    /* 2. Скрываем кнопку смены темы и лишние меню */
-    #MainMenu, header, footer {
-        visibility: hidden !important;
-        height: 0 !important;
-    }
-
-    /* 3. Делаем кнопку развертывания сайдбара видимой (фикс прошлой ошибки) */
-    button[data-testid="sidebar-button"] {
-        visibility: visible !important;
-        background-color: #1C2028 !important;
-        color: white !important;
-        position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
-        z-index: 999999 !important;
-    }
-
-    /* 4. Принудительный темный цвет для всех элементов */
-    section[data-testid="stSidebar"] {
-        background-color: #0B0E14 !important;
-        border-right: 1px solid #2D333B !important;
-    }
-
+    /* Стилизация карточек метрик */
     div[data-testid="stMetric"] {
-        background: #1C2028 !important;
-        border: 1px solid #2D333B !important;
-        border-radius: 8px !important;
+        background-color: rgba(125, 125, 125, 0.1);
+        border: 1px solid rgba(125, 125, 125, 0.2);
+        padding: 15px 20px;
+        border-radius: 10px;
     }
 
-    /* 5. Фикс текста: всегда белый */
-    h1, h2, h3, h4, p, span, label, .stMarkdown {
-        color: #FFFFFF !important;
+    /* Стилизация пояснительных блоков */
+    .help-box {
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background-color: rgba(0, 123, 255, 0.05);
+        border-left: 4px solid #007BFF;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
     }
 
-    .stSelectbox div[data-baseweb="select"] {
-        background-color: #1C2028 !important;
-        color: white !important;
+    /* Фикс кнопок */
+    .stButton>button {
+        width: 100%;
+        border-radius: 5px;
+        font-weight: 500;
     }
 
-    /* Кнопки */
-    div.stButton > button {
-        background-color: #007BFF !important;
-        color: white !important;
-        border: none !important;
-        width: 100% !important;
+    /* Заголовки с иконками */
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- НАВИГАЦИЯ ---
+# --- ЛЕВАЯ ПАНЕЛЬ (НАВИГАЦИЯ) ---
 with st.sidebar:
-    st.markdown("### АД-МАРК // CORE")
+    st.title("AD-MARK // CORE")
     st.write("---")
 
     choice = st.selectbox(
-        "РАЗДЕЛ СИСТЕМЫ:",
-        ["МОНИТОРИНГ", "ПРОВЕРКА", "РЕЕСТР", "ОТЧЕТНОСТЬ"]
+        "РАЗДЕЛ СИСТЕМЫ",
+        ["МОНИТОРИНГ", "ВАЛИДАЦИЯ", "РЕЕСТР", "ОТЧЕТНОСТЬ"],
+        help="Выберите модуль для работы с данными маркировки"
     )
-    # Плашка "Статус ок" удалена по твоей просьбе
-
-# --- КОНТЕНТ ---
-
-if choice == "МОНИТОРИНГ":
-    st.markdown("## МОНИТОРИНГ ПОКАЗАТЕЛЕЙ")
-
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.metric("ТОКЕНЫ (erid)", "154", help="Уникальный номер каждой рекламы")
-    with c2:
-        st.metric("ВАЛИДАЦИЯ (проверка)", "100%", help="Процент верных данных")
-    with c3:
-        st.metric("ОБОРОТ (МЕСЯЦ)", "840 000 ₽")
 
     st.write("---")
-    st.subheader("ГРАФИК АКТИВНОСТИ")
+    st.caption("Версия системы: 1.1.0")
+    st.caption("Статус соединения с ЕРИР: Активен")
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=['Нед 1', 'Нед 2', 'Нед 3', 'Нед 4'],
-        y=[120, 180, 150, 210],
-        mode='lines+markers',
-        line=dict(color='#007BFF', width=3),
-        marker=dict(size=8, color='#FFFFFF')
-    ))
+# --- ЛОГИКА МОДУЛЕЙ ---
 
-    fig.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font_color="#FFFFFF",
-        height=350,
-        margin=dict(l=0, r=0, t=10, b=0),
-        xaxis=dict(showgrid=False, fixedrange=True),
-        yaxis=dict(showgrid=True, gridcolor='#2D333B', fixedrange=True),
-        hovermode=False
-    )
+if choice == "МОНИТОРИНГ":
+    st.subheader("МОНИТОРИНГ ПОКАЗАТЕЛЕЙ")
 
-    st.plotly_chart(fig, use_container_width=True, config={'staticPlot': True})
+    # Метрики с пояснениями через help
+    col1, col2, col3 = st.columns(3)
+    col1.metric("АКТИВНЫЕ ТОКЕНЫ", "154",
+                help="Количество идентификаторов (erid), находящихся в ротации в текущем месяце")
+    col2.metric("ВАЛИДАЦИЯ", "100%", help="Процент данных, прошедших автоматическую проверку на соответствие ФЗ-347")
+    col3.metric("ОБОРОТ (МЕСЯЦ)", "840 000 ₽",
+                help="Суммарный объем финансовых обязательств по зарегистрированным договорам")
 
-elif choice == "ПРОВЕРКА":
-    st.markdown("## ИИ-АНАЛИЗ МАРКИРОВКИ")
-    input_text = st.text_area("ТЕКСТ ОБЪЯВЛЕНИЯ:", height=200)
+    st.write("---")
 
-    if st.button("ЗАПУСТИТЬ АНАЛИЗ"):
-        with st.status("Сканирование...") as s:
-            time.sleep(0.6)
+    c_left, c_right = st.columns([2, 1])
+
+    with c_left:
+        st.markdown('<div class="section-header"><h4>ГРАФИК АКТИВНОСТИ РАЗМЕЩЕНИЙ</h4></div>', unsafe_allow_html=True)
+        # График, который подстраивается под тему
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=['Нед 1', 'Нед 2', 'Нед 3', 'Нед 4'],
+            y=[120, 180, 150, 210],
+            mode='lines+markers',
+            line=dict(color='#007BFF', width=3)
+        ))
+        fig.update_layout(
+            template="none",
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=20, b=0),
+            height=300,
+            xaxis=dict(showgrid=False),
+            yaxis=dict(gridcolor='rgba(125,125,125,0.2)')
+        )
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+
+    with c_right:
+        st.markdown('<div class="section-header"><h4>СТАТУС ЕРИР</h4></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="help-box">
+            <b>Последний токен:</b><br>
+            <code>77vJ6fGvR</code><br>
+            Статус: Подтвержден
+        </div>
+        <div class="help-box">
+            <b>Очередь обработки:</b><br>
+            Объектов: 12<br>
+            Ожидание: 0.4 сек
+        </div>
+        """, unsafe_allow_html=True)
+
+elif choice == "ВАЛИДАЦИЯ":
+    st.subheader("ИНТЕЛЛЕКТУАЛЬНАЯ ПРОВЕРКА")
+    st.write("Проверка рекламных материалов на соответствие требованиям ст. 18.1 ФЗ 'О рекламе'.")
+
+    input_text = st.text_area("ТЕКСТ ДЛЯ АНАЛИЗА", height=200,
+                              help="Вставьте текст рекламного объявления, включая информацию о рекламодателе и erid")
+
+    if st.button("ЗАПУСТИТЬ ПРОВЕРКУ"):
+        with st.status("Выполняется лингвистический анализ...") as status:
+            time.sleep(1)
             has_erid = "erid" in input_text.lower()
             has_adv = "реклама" in input_text.lower()
-            s.update(label="Готово", state="complete")
+            status.update(label="Проверка завершена", state="complete")
 
         if has_erid and has_adv:
-            st.success("Маркировка корректна")
+            st.success("Нарушений не выявлено. Все обязательные атрибуты присутствуют.")
         else:
-            st.error("Обнаружены ошибки")
-            if not has_erid: st.info("Нет номера erid")
-            if not has_adv: st.info("Нет пометки 'Реклама'")
+            st.error("Обнаружены несоответствия:")
+            if not has_erid: st.info("Отсутствует буквенно-цифровой код erid (токен).")
+            if not has_adv: st.info("Отсутствует обязательная пометка 'Реклама'.")
 
 elif choice == "РЕЕСТР":
-    st.markdown("## РЕЕСТР КОНТРАГЕНТОВ")
+    st.subheader("РЕЕСТР КОНТРАГЕНТОВ И ДОГОВОРОВ")
+    st.write("Централизованная база данных участников рекламной цепочки.")
+
     df = pd.DataFrame({
         "ID": ["102", "105", "110"],
-        "КЛИЕНТ": ["ООО МЕДИАСЕТЬ", "ИП СМИРНОВ", "ООО КРЕАТИВ"],
+        "КОНТРАГЕНТ": ["ООО МЕДИАСЕТЬ", "ИП СМИРНОВ", "ООО КРЕАТИВ"],
         "ИНН": ["7701445522", "500111223344", "7810556677"],
+        "ТОКЕНОВ": [45, 12, 97],
         "СТАТУС": ["ПРОВЕРЕН", "ПРОВЕРЕН", "ПРОВЕРЕН"]
     })
-    st.table(df)
+
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.caption("Данные синхронизированы с ЕГРЮЛ/ЕГРИП")
 
 elif choice == "ОТЧЕТНОСТЬ":
-    st.markdown("## ЭКСПОРТ В ЕРИР")
-    st.selectbox("ПЕРИОД:", ["ЯНВАРЬ 2026", "ФЕВРАЛЬ 2026"])
-    if st.button("СФОРМИРОВАТЬ ОТЧЕТ"):
-        st.download_button("СКАЧАТЬ XML", data="DATA", file_name="report.xml")
+    st.subheader("ФОРМИРОВАНИЕ ОТЧЕТНОСТИ")
+    st.write("Подготовка данных для передачи Операторам Рекламных Данных (ОРД).")
+
+    period = st.selectbox("ОТЧЕТНЫЙ ПЕРИОД", ["Январь 2026", "Февраль 2026"])
+
+    st.markdown('<div class="section-header"><b>ГОТОВНОСТЬ ДАННЫХ</b></div>', unsafe_allow_html=True)
+    st.progress(0.85, text="85% объектов валидировано")
+
+    if st.button("СФОРМИРОВАТЬ ПАКЕТ ДАННЫХ"):
+        st.toast("Файл подготовлен")
+        st.download_button("СКАЧАТЬ (.XML)", data="DATA", file_name=f"report_{period}.xml")
