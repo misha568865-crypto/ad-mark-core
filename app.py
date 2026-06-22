@@ -171,6 +171,17 @@ with st.sidebar:
         ["АНАЛИТИКА И МОНИТОРИНГ", "ВАЛИДАЦИЯ ТЕКСТА", "РЕЕСТР", "ФОРМИРОВАНИЕ И ЭКСПОРТ"]
     )
     st.write("---")
+    st.info("База данных: Подключена")
+
+    # ФИКС: Некликабельные "Настройки ЛК" без стикера
+    st.markdown(
+        """
+        <div style="color: #6c757d; padding: 10px 5px; margin-top: 10px; display: flex; align-items: center; font-size: 1rem;">
+            <b>Настройки ЛК</b>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     if st.button("ВЫЙТИ ИЗ СИСТЕМЫ"):
         logout_user()
 
