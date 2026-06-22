@@ -4,17 +4,38 @@ import plotly.graph_objects as go
 import io
 import time
 
-# Настройка страницы
-st.set_page_config(
-    page_title="АПОЛОГЕТ",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# --- 1. КОНФИГУРАЦИЯ И СТИЛИ ---
+st.set_page_config(page_title="CLEAR REPORT", layout="wide")
 
-# Стили для профессионального вида
 st.markdown("""
     <style>
-    .main { font-family: 'Segoe UI', sans-serif; }
+    /* Скрываем системный мусор, но ОСТАВЛЯЕМ стрелку сайдбара */
+    .stDeployButton {display:none !important;}
+    #MainMenu {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
+
+    /* Делаем верхнюю панель прозрачной, чтобы стрелочка меню (> / <) была видна и кликабельна */
+    header {background-color: transparent !important;}
+
+    /* Перекрашиваем главные кнопки (primary) в синий цвет */
+    button[kind="primary"] {
+        background-color: #007BFF !important;
+        border-color: #007BFF !important;
+        color: white !important;
+    }
+    button[kind="primary"]:hover {
+        background-color: #0056b3 !important;
+        border-color: #0056b3 !important;
+    }
+
+    /* Подкрашиваем стрелочку в выпадающих списках (selectbox) */
+    div[data-testid="stSelectbox"] svg {
+        fill: #007BFF !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    /* Стили для метрик и карточек */
     div[data-testid="stMetric"] {
         background-color: rgba(125, 125, 125, 0.05);
         border: 1px solid rgba(125, 125, 125, 0.1);
@@ -28,30 +49,136 @@ st.markdown("""
         border-left: 5px solid #007BFF;
         margin-bottom: 10px;
     }
+
+    /* Стилизация лендинга */
+    .landing-header {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    .landing-subheader {
+        text-align: center;
+        margin-bottom: 3rem;
+        color: #6c757d;
+        font-weight: normal;
+    }
+    .landing-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- САЙДБАР ---
+# --- 2. УПРАВЛЕНИЕ СОСТОЯНИЯМИ ---
+
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'show_login_form' not in st.session_state:
+    st.session_state.show_login_form = False
+
+
+def login_user(user, pwd):
+    if user == "test" and pwd == "12345678":
+        st.session_state.logged_in = True
+        st.success("Доступ разрешен. Загрузка ядра...")
+        time.sleep(0.5)
+        st.rerun()
+    else:
+        st.error("Неверный логин или пароль")
+
+
+def logout_user():
+    st.session_state.logged_in = False
+    st.session_state.show_login_form = False
+    st.rerun()
+
+
+def go_to_login():
+    st.session_state.show_login_form = True
+    st.rerun()
+
+
+def go_back_to_landing():
+    st.session_state.show_login_form = False
+    st.rerun()
+
+
+# --- 3. МАРШРУТИЗАЦИЯ ДО ВХОДА ---
+
+if not st.session_state.logged_in:
+
+    # 3.1. ЛЕНДИНГ (Вводная страница)
+    if not st.session_state.show_login_form:
+        st.markdown('<h1 class="landing-header">CLEAR REPORT</h1>', unsafe_allow_html=True)
+        st.markdown('<h3 class="landing-subheader">Экосистема автоматизированного контроля рекламных размещений</h3>',
+                    unsafe_allow_html=True)
+
+        _, col2, _ = st.columns([1, 2, 1])
+        with col2:
+            st.markdown("""
+            <div class="landing-text">
+            <b>Система «CLEAR REPORT»</b> — это ваш надежный юридический и технический фильтр в сфере цифрового маркетинга. Мы помогаем бизнесу соблюдать требования ФЗ-347, автоматизируя процессы маркировки и передачи данных в ЕРИР.
+            <br><br>
+            <b>КЛЮЧЕВЫЕ ВОЗМОЖНОСТИ ПЛАТФОРМЫ:</b>
+            <ul>
+                <li><b>Интеллектуальная валидация:</b> Автоматическая проверка креативов на наличие обязательных маркеров («Реклама», токен erid). Снижение риска штрафов до 0%.</li>
+                <li><b>Учет и систематизация:</b> Единый реестр контрагентов и рекламных кампаний для контроля всей цепочки размещений.</li>
+                <li><b>Мониторинг активности:</b> Отслеживание статусов токенов, бюджетов и количества просмотров в режиме реального времени.</li>
+                <li><b>Генерация отчетности:</b> Формирование готовых пакетов данных в формате Excel для операторов рекламных данных (ОРД) в один клик.</li>
+            </ul>
+            <i>Доверьте рутину алгоритмам. Сосредоточьтесь на эффективности.</i>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.write("---")
+            if st.button("ВОЙТИ В СИСТЕМУ", use_container_width=True, type="primary"):
+                go_to_login()
+
+    # 3.2. ФОРМА ВХОДА И РЕГИСТРАЦИИ
+    else:
+        st.button("Вернуться на главную", on_click=go_back_to_landing)
+
+        _, center_col, _ = st.columns([1, 1, 1])
+
+        with center_col:
+            st.subheader("Авторизация")
+
+            with st.form("login_form"):
+                user = st.text_input("Логин", placeholder="test")
+                pwd = st.text_input("Пароль", type="password", placeholder="••••••••")
+
+                c1, c2 = st.columns(2)
+                with c1:
+                    submit = st.form_submit_button("ВОЙТИ", use_container_width=True)
+                with c2:
+                    register = st.form_submit_button("РЕГИСТРАЦИЯ", use_container_width=True)
+
+                if submit:
+                    login_user(user, pwd)
+                if register:
+                    st.info("Форма регистрации будет доступна после подключения базы данных.")
+
+    st.stop()
+
+# --- 4. ОСНОВНОЕ ПРИЛОЖЕНИЕ ---
+
 with st.sidebar:
-    st.title("Апологет")
+    st.title("CLEAR REPORT")
     st.caption("СИСТЕМА ИНТЕЛЛЕКТУАЛЬНОЙ МАРКИРОВКИ")
     st.write("---")
 
     menu = st.selectbox(
         "РАЗДЕЛ СИСТЕМЫ:",
-        ["МОНИТОРИНГ", "ВАЛИДАЦИЯ ТЕКСТА", "РЕЕСТР", "ГЕНЕРАЦИЯ ОТЧЕТА"]
+        ["АНАЛИТИКА И МОНИТОРИНГ", "ВАЛИДАЦИЯ ТЕКСТА", "РЕЕСТР", "ФОРМИРОВАНИЕ И ЭКСПОРТ"]
     )
     st.write("---")
-    st.info("База данных: Подключена")
+    if st.button("ВЫЙТИ ИЗ СИСТЕМЫ"):
+        logout_user()
 
-# --- МОДУЛИ ---
-
-if menu == "МОНИТОРИНГ":
+if menu == "АНАЛИТИКА И МОНИТОРИНГ":
     st.header("ПАНЕЛЬ УПРАВЛЕНИЯ")
-
     c1, c2, c3 = st.columns(3)
-    c1.metric("АКТИВНЫЕ erid", "154", help="Токены в ротации за текущий период")
-    c2.metric("ВАЛИДНОСТЬ", "100%", help="Проверка на соответствие ФЗ-347")
+    c1.metric("АКТИВНЫЕ erid", "154", help="Токены в ротации")
+    c2.metric("ВАЛИДНОСТЬ", "100%")
     c3.metric("ОБОРОТ", "840 000 ₽")
 
     st.write("---")
@@ -69,23 +196,17 @@ if menu == "МОНИТОРИНГ":
         st.subheader("ИНФОРМАЦИЯ")
         st.markdown("""
         <div class="help-card">
-            <b>Система Апологет</b> автоматически связывает ваши креативы с базой данных ЕРИР.
-        </div>
-        <div class="help-card">
-            Все токены проходят предварительную проверку перед публикацией.
+            <b>Система CLEAR REPORT</b> автоматически связывает ваши креативы с базой данных ЕРИР.
         </div>
         """, unsafe_allow_html=True)
 
 elif menu == "ВАЛИДАЦИЯ ТЕКСТА":
     st.header("ПРОВЕРКА НА СООТВЕТСТВИЕ ФЗ-347")
-    st.write("Вставьте текст рекламного объявления для анализа ИИ-алгоритмом.")
-
-    input_text = st.text_area("ТЕКСТ ОБЪЯВЛЕНИЯ", height=200, placeholder="Введите текст здесь...")
+    input_text = st.text_area("ТЕКСТ ОБЪЯВЛЕНИЯ", height=200)
 
     if st.button("ЗАПУСТИТЬ АНАЛИЗ"):
         if input_text:
-            # ФИКС: Всё, что внутри with st.status, теперь будет ВНУТРИ плашки
-            with st.status("Апологет анализирует данные...") as s:
+            with st.status("CLEAR REPORT анализирует данные...") as s:
                 time.sleep(1)
                 has_erid = "erid" in input_text.lower()
                 has_adv = "реклама" in input_text.lower()
@@ -104,42 +225,53 @@ elif menu == "ВАЛИДАЦИЯ ТЕКСТА":
 elif menu == "РЕЕСТР":
     st.header("РЕЕСТР КОНТРАГЕНТОВ")
     df = pd.DataFrame({
-        "ID": ["102", "105", "110", "121"],
         "КЛИЕНТ": ["ООО МЕДИАСЕТЬ", "ИП СМИРНОВ", "ООО КРЕАТИВ", "ООО АВРОРА"],
         "ИНН": ["7701445522", "500111223344", "7810556677", "7704556611"],
         "ТОКЕНОВ": [45, 12, 97, 3],
         "СТАТУС": ["ПРОВЕРЕН", "ПРОВЕРЕН", "ПРОВЕРЕН", "ПРОВЕРЕН"]
     })
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.table(df)
 
-elif menu == "ГЕНЕРАЦИЯ ОТЧЕТА":
-    st.header("ЭКСПОРТ ОТЧЕТНОСТИ")
-    st.write("Сформируйте финальный файл для передачи в ОРД в формате Excel.")
-
+elif menu == "ФОРМИРОВАНИЕ И ЭКСПОРТ":
+    st.header("ФОРМИРОВАНИЕ И ЭКСПОРТ ОТЧЕТНОСТИ")
     period = st.selectbox("ПЕРИОД:", ["ЯНВАРЬ 2026", "ФЕВРАЛЬ 2026"])
 
-    report_df = pd.DataFrame({
-        "Дата": ["01.01.2026", "15.01.2026", "20.01.2026"],
-        "ID Кампании": ["CAM-001", "CAM-002", "CAM-003"],
-        "erid": ["77vJ6fGvR", "2VtzquZ1a", "5BtzquX9b"],
-        "Сумма (руб)": [150000, 45000, 120000],
-        "Статус": ["Подтвержден", "Подтвержден", "Ожидание акт"]
-    })
+    # ИЗМЕНЕНИЕ: Динамическое разделение данных по месяцам
+    if period == "ЯНВАРЬ 2026":
+        report_df = pd.DataFrame({
+            "Дата": ["01.01.2026", "15.01.2026", "20.01.2026"],
+            "erid": ["77vJ6fGvRb", "2VtzquZ1aX", "5UGfwMukZ4"],
+            "Сумма (руб)": [150000, 45000, 120000],
+            "Кол-во просмотров": [500000, 150000, 400000],
+            "Стоимость одного просмотра": [0.30, 0.30, 0.30],
+            "Статус": ["Подтвержден", "Подтвержден", "Ожидание акт"]
+        })
+    else:  # ФЕВРАЛЬ 2026
+        report_df = pd.DataFrame({
+            "Дата": ["04.02.2026", "14.02.2026", "28.02.2026"],
+            "erid": ["99xK8hWvYn", "4MpqtrZ2bB", "8ZJfvNukX1"],
+            "Сумма (руб)": [195000, 60000, 140000],
+            "Кол-во просмотров": [650000, 200000, 430000],
+            "Стоимость одного просмотра": [0.30, 0.30, 0.32],
+            "Статус": ["Подтвержден", "Подтвержден", "Подтвержден"]
+        })
 
-    st.write("Предпросмотр данных отчета:")
+    # Выводим интерактивную таблицу, которая теперь зависит от выбора
     st.table(report_df)
+    st.write("---")
 
-    if st.button("СФОРМИРОВАТЬ EXCEL"):
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            report_df.to_excel(writer, index=False, sheet_name='Отчет_Апологет')
+    # Компилируем Excel "на лету" из текущего report_df
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        report_df.to_excel(writer, index=False, sheet_name=f'Отчет_{period.replace(" ", "_")}')
+    excel_data = output.getvalue()
 
-        excel_data = output.getvalue()
-
-        st.success("Отчет «Апологет» сформирован!")
-        st.download_button(
-            label="СКАЧАТЬ EXCEL (.XLSX)",
-            data=excel_data,
-            file_name=f"Apologet_Report_{period.replace(' ', '_')}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    # Кнопка скачивания заберет именно те данные, которые сгенерировались в if-else выше
+    st.download_button(
+        label=f"СКАЧАТЬ ОТЧЕТ ЗА {period} (.XLSX)",
+        data=excel_data,
+        file_name=f"CLEAR REPORT_Report_{period.replace(' ', '_')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+        type="primary"
+    )
